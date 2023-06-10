@@ -1,0 +1,183 @@
+# Libraries
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+%matplotlib inline
+import seaborn as sns
+import sklearn
+import xgboost as xgb
+import pylab as pl
+from sklearn import preprocessing
+from sklearn.tree import DecisionTreeClassifier
+%matplotlib inline
+from sklearn.cluster import KMeans 
+from sklearn.datasets import make_blobs 
+from sklearn.cluster import DBSCAN 
+from sklearn import manifold, datasets 
+from sklearn.cluster import AgglomerativeClustering 
+from scipy.cluster import hierarchy 
+from sklearn.metrics import confusion_matrix
+
+# load and preparing Data
+
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+Churn = pd.read_csv("Churn.csv")
+type(Churn)
+
+# EDA
+
+Churn.head()   #Churn.tail()
+Churn.describe()
+Churn.nunique()
+Churn.info() 
+Churn.columns
+Churn.shape
+
+# Data PreProcessing
+
+Churn.drop("RowNumber", axis=1, inplace = True)
+Churn.drop("CustomerId", axis=1, inplace = True)
+Churn.drop("Surname", axis=1, inplace = True)
+Churn.head() 
+Churn['Gender']=Churn['Gender'].map({'Male':1,'Female':0})
+Location = pd.get_dummies(Churn["Geography"])
+#print (vaccine)
+#df.head()
+churn = pd.concat([Churn,Location],axis=1)
+churn.drop("Geography", axis=1, inplace = True)
+churn.head()
+churn.shape
+print(churn.size) 
+
+# Cleaning Data
+
+churn['CreditScore'] = churn['CreditScore'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['Gender'] = churn['Gender'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['Age'] = churn['Age'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['Tenure'] = churn['Tenure'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['Balance'] = churn['Balance'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['NumOfProducts'] = churn['NumOfProducts'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['IsActiveMember'] = churn['IsActiveMember'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['EstimatedSalary'] = churn['EstimatedSalary'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['France'] = churn['France'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['Germany'] = churn['Germany'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['Spain'] = churn['Spain'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+churn['Exited'] = churn['Exited'].replace([' ',','],'',regex=True)    # modifying , and spaces in dataframe
+
+churn.dropna(how='any', axis=0, inplace=True) # if any value in a row is NaN it will be dropped
+print(churn.size) 
+
+# Story Telling and Visualization
+
+sns.displot(churn, x="CreditScore")
+sns.displot(churn, x="Gender")
+sns.displot(churn, x="Age")
+sns.displot(churn, x="Balance")
+sns.displot(churn, x="EstimatedSalary")
+sns.displot(churn, x="Exited")
+corr = churn.corr()
+plt.figure(figsize=(10,8)) 
+sns.heatmap(corr, cmap='viridis', annot=True)
+sns.displot(churn, x="Balance", hue='Exited',kind="kde")
+sns.displot(churn, x="EstimatedSalary", hue='Exited',kind="kde")
+
+# PreParing Data For Machine Learning
+
+x = churn.drop(['Exited'], axis=1)
+y = churn['Exited']
+#print(x.head())
+#print(x.shape)
+#print(y.head())
+#print(y.shape)
+X = preprocessing.StandardScaler().fit(x).transform(x)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=5)
+print(X_train.shape)
+print(y_train.shape)
+print(X_test.shape)
+print(y_test.shape)
+
+# Train The Model
+
+model = XGBClassifier()
+model.fit(X_train, y_train)
+
+# Test The model and show metrics
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred) * 100
+print("Accuracy of the Logistic Regression Model: ",accuracy)
+
+from sklearn import metrics
+import matplotlib.pyplot as plt
+print(" Accuracy: ", metrics.accuracy_score(y_test, y_pred))
+
+from sklearn.metrics import jaccard_score
+jaccard_score(y_test, y_pred,pos_label=0)
+
+from sklearn.metrics import classification_report, confusion_matrix
+import itertools
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+print(confusion_matrix(y_test, y_pred, labels=[1,0]))
+
+print (classification_report(y_test, y_pred))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
